@@ -1,189 +1,325 @@
 # AWS Self-Healing Cloud Infrastructure
 
-## Project Overview
+## Overview
 
-This project demonstrates a self-healing AWS infrastructure that automatically detects high CPU utilization on an EC2 instance and performs an automated recovery action.
+This project demonstrates a self-healing AWS infrastructure that automatically detects high CPU utilization on an Amazon EC2 instance and performs automated recovery.
 
-The project uses Amazon CloudWatch for monitoring, Amazon SNS for notifications, and an EC2 automated reboot action for remediation.
+The infrastructure is managed using **Terraform** and uses Amazon CloudWatch for monitoring, Amazon SNS for notifications, AWS Systems Manager for secure instance management and testing, and an automated EC2 reboot action for remediation.
 
-## Project Objective
+### Self-Healing Workflow
 
-The objective is to:
+**Monitor → Detect → Notify → Remediate → Recover**
 
-1. Monitor EC2 CPU utilization.
-2. Detect high CPU usage.
-3. Trigger a CloudWatch alarm.
-4. Send an email notification through SNS.
-5. Automatically reboot the EC2 instance.
-6. Verify that the instance recovers successfully.
+---
 
 ## Architecture
 
-![Self-Healing Architecture](architecture/Self-healing-architecture3.jpg)
-
-### Workflow
-
 ```text
-EC2 Instance
-     |
-     | CPU utilization
-     v
-CloudWatch
-     |
-     | CPU > 80%
-     v
-CloudWatch Alarm
-     |
-     +-------------> SNS Email Notification
-     |
-     v
-EC2 Reboot Action
-     |
-     v
-EC2 Recovery
-     |
-     v
-CloudWatch returns to OK
-AWS Services Used
+                    Amazon EC2
+                 CloudRescue-EC2
+                 Amazon Linux 2023
+                        |
+                        | CPUUtilization
+                        v
+                Amazon CloudWatch
+                        |
+                     CPU > 80%
+                        |
+                        v
+                 CloudWatch Alarm
+              CloudRescue-HighCPU
+                   /          \
+                  /            \
+                 v              v
+          Amazon SNS       EC2 Reboot
+        Email Notification   Action
+                                |
+                                v
+                         EC2 Recovery
+                                |
+                                v
+                         Alarm → OK
+
+AWS Services
 Service	Purpose
-Amazon EC2	Runs the Linux server
-Amazon CloudWatch	Monitors CPU utilization
+Amazon EC2	Hosts the Linux workload
+Amazon CloudWatch	Monitors EC2 CPU utilization
+CloudWatch Alarm	Detects high CPU conditions
 Amazon SNS	Sends email notifications
-AWS Systems Manager	Provides secure access to the EC2 instance
+AWS Systems Manager	Secure instance management and remote testing
 Amazon VPC	Provides networking
 Amazon EBS	Provides EC2 storage
-EC2 Configuration
-Operating System: Amazon Linux
-Instance Type: t3.micro
-Monitoring: Amazon CloudWatch
-Access: AWS Systems Manager Session Manager
-Storage: EBS
-Region: ap-south-1
-CloudWatch Alarm
+Terraform	Infrastructure as Code and resource management
 
-Alarm name:
+EC2 Configuration
+Configuration	Value
+
+Operating System	Amazon Linux 2023
+Instance Type	t3.micro
+Region	ap-south-1
+Access	AWS Systems Manager
+Monitoring	Amazon CloudWatch
+Storage	Amazon EBS
+Management	Terraform
+
+CloudWatch Alarm
+Alarm Name
 
 CloudRescue-HighCPU-SelfHealing
 
-Configuration:
+Configuration
+Setting	Value
+Namespace	AWS/EC2
+Metric	CPUUtilization
+Statistic	Average
+Period	60 seconds
+Threshold	Greater than 80%
+Evaluation Periods	2
+Datapoints to Alarm	2
+Comparison	GreaterThanThreshold
+Missing Data	Missing
 
-Metric: CPUUtilization
-Statistic: Average
-Period: 5 minutes
-Threshold: Greater than 80%
-Evaluation: 2 out of 2 datapoints
-Alarm action: Reboot EC2 instance
-Notification: SNS email
-Testing
+Alarm Actions
 
-The self-healing mechanism was tested by intentionally generating high CPU utilization on the EC2 instance using stress-ng.
+When CPU utilization remains above the configured threshold:
 
-stress-ng --cpu 2 --timeout 12m
-Testing Flow
+Amazon SNS sends an email notification.
+
+The EC2 reboot action automatically reboots the instance.
+
+Terraform Infrastructure as Code
+
+Terraform was used to bring the existing AWS resources under Infrastructure as Code management.
+
+The following resources are managed by Terraform:
+
+aws_instance.cloudrescue
+aws_sns_topic.self_healing_alerts
+aws_sns_topic_subscription.email_alerts
+aws_cloudwatch_metric_alarm.high_cpu
+
+Existing AWS resources were imported into Terraform state using terraform import.
+
+Terraform Validation
+
+terraform validate
+
+Success! The configuration is valid.
+
+Final Terraform Verification
+terraform plan
+
+No changes. Your infrastructure matches the configuration.
+
+This confirms that the real AWS infrastructure matches the Terraform configuration.
+
+Self-Healing Test
+
+The self-healing mechanism was tested by remotely generating high CPU utilization on the Amazon Linux EC2 instance through AWS Systems Manager.
+
+The test used the AWS Systems Manager AWS-RunShellScript document to generate sustained CPU load.
+
+The test successfully produced approximately:
+
+99.99% CPU utilization
+
+Testing Workflow
 CPU Load Generated
         |
         v
-CPU Utilization > 80%
+CPU Utilization ≈ 99.99%
         |
         v
-CloudWatch Alarm
+CloudWatch Detects CPU > 80%
         |
         v
-ALARM State
+Alarm: OK → ALARM
         |
-        +------> SNS Email
+        +------------------> SNS Email Notification
         |
-        +------> EC2 Reboot
-                    |
-                    v
-              EC2 Recovery
-                    |
-                    v
-             Alarm returns OK
-Project Evidence
-EC2 Instance
+        v
+Automatic EC2 Reboot
+        |
+        v
+Reboot Completed Successfully
+        |
+        v
+EC2 Returns to Running State
+        |
+        v
+CloudWatch Alarm → OK
 
-CloudWatch Alarm
+Test Results
 
-Alarm History
+High CPU Detection
 
-SNS Email Notification
+CloudWatch detected a CPU utilization datapoint of approximately:
+
+99.99333361644676%
+
+The alarm transitioned from OK to ALARM.
+
+SNS Notification
+
+An SNS email notification was successfully received when the CloudWatch alarm entered the ALARM state.
+
+Automated Recovery
+
+CloudWatch alarm history confirmed:
+
+Reboot EC2 Instance 'i-05da00ac8d5dd3707' action completed successfully
 
 EC2 Recovery
 
-Project Report
+After the automated reboot, the instance was verified as:
 
-A detailed implementation report is available here:
+State: running
 
-Project Implementation Report
+Systems Manager
 
-The report contains the implementation steps, configuration, testing process, screenshots, and results.
+The instance was also verified through Systems Manager:
+
+PingStatus: Online
+Platform: Amazon Linux
+Final Alarm State
+
+After CPU utilization returned to normal, the CloudWatch alarm returned to:
+
+OK
+
+Terraform Management Workflow
+Existing AWS Infrastructure
+          |
+          v
+Terraform Configuration
+          |
+          v
+terraform import
+          |
+          v
+Terraform State
+          |
+          v
+terraform plan
+          |
+          v
+Review Changes
+          |
+          v
+terraform apply
+          |
+          v
+Terraform-Managed Infrastructure
+          |
+          v
+terraform plan
+          |
+          v
+No Changes
 
 Repository Structure
 AWS-self-healing-cloud-infrastructure/
-|
-+-- architecture/
-|   +-- Self-healing-architecture3.jpg
-|
-+-- docs/
-|   +-- project-implementation-report.pdf
-|
-+-- screenshots/
-|   +-- 01-ec2-instance.png
-|   +-- 02-cloudwatch-alarm.png
-|   +-- 03-alarm-history-1.png
-|   +-- 03-alarm-history-2.png
-|   +-- 04-sns-email-1.png
-|   +-- 04-sns-email-2.png
-|   +-- 05-recovery-1.png
-|   +-- 05-recovery-2.png
-|
-+-- scripts/
-|   +-- cpu-stress-test.sh
-|
-+-- .gitignore
-+-- README.md
+│
+├── terraform/
+│   ├── providers.tf
+│   ├── variables.tf
+│   ├── data.tf
+│   ├── ec2.tf
+│   ├── sns.tf
+│   ├── sns_subscription.tf
+│   ├── cloudwatch.tf
+│   └── .terraform.lock.hcl
+│
+├── .gitignore
+└── README.md
+
+Terraform state files and the .terraform directory are excluded from Git using .gitignore.
+
+Temporary CPU testing files were removed before repository finalization.
+
 Skills Demonstrated
-AWS EC2
+
+AWS
+Amazon EC2
 Amazon CloudWatch
 Amazon SNS
 AWS Systems Manager
+Amazon VPC
+Amazon EBS
+IAM fundamentals
+
+Infrastructure as Code
+Terraform
+Terraform resource management
+Terraform import
+Terraform state management
+Terraform validate
+Terraform plan
+Infrastructure drift detection
+
 Linux
-Bash scripting
-Monitoring and alerting
+Amazon Linux
+Bash/Shell commands
+CPU troubleshooting
+Remote command execution
+
+Cloud Operations
+Monitoring
+Alerting
+Threshold-based detection
 Automated remediation
-Git and GitHub
-AWS infrastructure troubleshooting
-Result
+Incident recovery
+AWS CLI troubleshooting
 
-The project successfully demonstrates the following self-healing workflow:
+DevOps
+Infrastructure as Code
+AWS CLI
+Git
+GitHub
+Automation
+Monitoring
+Self-healing infrastructure
+Key Outcome
 
-Monitor -> Detect -> Notify -> Remediate -> Recover
+The project successfully demonstrates:
 
-High CPU utilization was generated using stress-ng. CloudWatch detected the condition, SNS provided email notification, and the configured EC2 reboot action provided automated remediation.
+Monitor → Detect → Notify → Remediate → Recover
+
+A high CPU condition was intentionally generated on the EC2 instance. CloudWatch detected the condition, triggered the alarm, SNS delivered an email notification, and the configured EC2 reboot action successfully recovered the instance.
+
+The infrastructure was subsequently verified using AWS CLI, Systems Manager, CloudWatch, and Terraform.
 
 Future Improvements
-Terraform Infrastructure as Code
-Automated infrastructure deployment
+Terraform modules
+Remote Terraform state using Amazon S3
+Terraform state locking
 CloudWatch dashboards
-Additional monitoring alarms
-Advanced Systems Manager remediation
-CI/CD integration
+Additional infrastructure health alarms
+Systems Manager automated remediation
+Auto Scaling integration
+Application health monitoring
+CI/CD pipeline
+GitHub Actions
+Automated infrastructure testing
 Project Status
+Component	Status
+EC2 Infrastructure	✅ Completed
+CloudWatch Monitoring	✅ Completed
+CloudWatch Alarm	✅ Completed
+SNS Notification	✅ Completed
+SNS Email Subscription	✅ Completed
+AWS Systems Manager	✅ Completed
+Automated EC2 Recovery	✅ Completed
+Self-Healing Test	✅ Completed
+Terraform Management	✅ Completed
+Terraform Validation	✅ Completed
+Terraform Plan Verification	✅ Completed
+Documentation	        ✅ Completed
+GitHub Finalization	✅ Completed
 
-AWS infrastructure: Completed
 
-CloudWatch monitoring: Completed
+Conclusion
 
-SNS notification: Completed
+This project demonstrates how AWS monitoring, alerting, automated remediation, and Infrastructure as Code can be combined to create a resilient self-healing cloud environment.
 
-Automated EC2 recovery: Completed
-
-Testing: Completed
-
-Documentation: Completed
-
-GitHub repository: Completed
-
-Terraform: Next phase
-'@ | Set-Content -Encoding UTF8 .\README.md
+The implementation successfully detects high CPU utilization, sends an alert, automatically reboots the affected EC2 instance, verifies recovery, and maintains the infrastructure through Terraform.
