@@ -41,6 +41,7 @@ The infrastructure is managed using **Terraform** and uses Amazon CloudWatch for
                          Alarm → OK
 
 AWS Services
+
 Service	Purpose
 Amazon EC2	Hosts the Linux workload
 Amazon CloudWatch	Monitors EC2 CPU utilization
@@ -52,6 +53,7 @@ Amazon EBS	Provides EC2 storage
 Terraform	Infrastructure as Code and resource management
 
 EC2 Configuration
+
 Configuration	Value
 
 Operating System	Amazon Linux 2023
@@ -63,8 +65,8 @@ Storage	Amazon EBS
 Management	Terraform
 
 CloudWatch Alarm
-Alarm Name
 
+Alarm Name
 CloudRescue-HighCPU-SelfHealing
 
 Configuration
@@ -82,9 +84,7 @@ Missing Data	Missing
 Alarm Actions
 
 When CPU utilization remains above the configured threshold:
-
 Amazon SNS sends an email notification.
-
 The EC2 reboot action automatically reboots the instance.
 
 Terraform Infrastructure as Code
@@ -103,12 +103,11 @@ Existing AWS resources were imported into Terraform state using terraform import
 Terraform Validation
 
 terraform validate
-
 Success! The configuration is valid.
 
 Final Terraform Verification
-terraform plan
 
+terraform plan
 No changes. Your infrastructure matches the configuration.
 
 This confirms that the real AWS infrastructure matches the Terraform configuration.
@@ -116,11 +115,8 @@ This confirms that the real AWS infrastructure matches the Terraform configurati
 Self-Healing Test
 
 The self-healing mechanism was tested by remotely generating high CPU utilization on the Amazon Linux EC2 instance through AWS Systems Manager.
-
 The test used the AWS Systems Manager AWS-RunShellScript document to generate sustained CPU load.
-
 The test successfully produced approximately:
-
 99.99% CPU utilization
 
 Testing Workflow
@@ -150,41 +146,31 @@ EC2 Returns to Running State
 CloudWatch Alarm → OK
 
 Test Results
-
 High CPU Detection
-
 CloudWatch detected a CPU utilization datapoint of approximately:
-
 99.99333361644676%
-
 The alarm transitioned from OK to ALARM.
 
 SNS Notification
-
 An SNS email notification was successfully received when the CloudWatch alarm entered the ALARM state.
 
 Automated Recovery
-
 CloudWatch alarm history confirmed:
 
 Reboot EC2 Instance 'i-05da00ac8d5dd3707' action completed successfully
 
 EC2 Recovery
-
 After the automated reboot, the instance was verified as:
-
 State: running
 
 Systems Manager
-
 The instance was also verified through Systems Manager:
-
 PingStatus: Online
 Platform: Amazon Linux
+
 Final Alarm State
 
 After CPU utilization returned to normal, the CloudWatch alarm returned to:
-
 OK
 
 Terraform Management Workflow
@@ -279,8 +265,8 @@ GitHub
 Automation
 Monitoring
 Self-healing infrastructure
-Key Outcome
 
+Key Outcome
 The project successfully demonstrates:
 
 Monitor → Detect → Notify → Remediate → Recover
@@ -301,8 +287,10 @@ Application health monitoring
 CI/CD pipeline
 GitHub Actions
 Automated infrastructure testing
+
 Project Status
 Component	Status
+
 EC2 Infrastructure	✅ Completed
 CloudWatch Monitoring	✅ Completed
 CloudWatch Alarm	✅ Completed
