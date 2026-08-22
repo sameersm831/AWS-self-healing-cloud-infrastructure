@@ -276,6 +276,7 @@ A high CPU condition was intentionally generated on the EC2 instance. CloudWatch
 The infrastructure was subsequently verified using AWS CLI, Systems Manager, CloudWatch, and Terraform.
 
 Future Improvements
+
 Terraform modules
 Remote Terraform state using Amazon S3
 Terraform state locking
@@ -289,21 +290,21 @@ GitHub Actions
 Automated infrastructure testing
 
 Project Status
-Component	Status
+Component	                      Status
 
-EC2 Infrastructure	✅ Completed
-CloudWatch Monitoring	✅ Completed
-CloudWatch Alarm	✅ Completed
-SNS Notification	✅ Completed
-SNS Email Subscription	✅ Completed
-AWS Systems Manager	✅ Completed
-Automated EC2 Recovery	✅ Completed
-Self-Healing Test	✅ Completed
-Terraform Management	✅ Completed
-Terraform Validation	✅ Completed
-Terraform Plan Verification	✅ Completed
-Documentation	        ✅ Completed
-GitHub Finalization	✅ Completed
+EC2 Infrastructure	         ✅ Completed
+CloudWatch Monitoring	       ✅ Completed
+CloudWatch Alarm	           ✅ Completed
+SNS Notification	           ✅ Completed
+SNS Email Subscription	     ✅ Completed
+AWS Systems Manager	         ✅ Completed
+Automated EC2 Recovery	     ✅ Completed
+Self-Healing Test	           ✅ Completed
+Terraform Management	       ✅ Completed
+Terraform Validation	       ✅ Completed
+Terraform Plan Verification  ✅ Completed
+Documentation	               ✅ Completed
+GitHub Finalization	         ✅ Completed
 
 
 Conclusion
